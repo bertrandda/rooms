@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sockets</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link type="text/css" rel="stylesheet" href="../css/client.css">
+    <link href="https://fonts.googleapis.com/css?family=Teko" rel="stylesheet">
+    <script src='../js/palette.js'></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <h1 id="title">Room : </h2>
+    <div id="messages-history"></div>
+    <div id="div-send">
+        <input id="message" autocomplete="off" type="text">
+        <input id="send-message" value="Send" type="button" onclick="send()">
+    </div>
+    <script>
+        let room = 'room1';
+        let socket = io.connect('/', { query: `room=${room}` });
+        let id;
+        let color;
+
+        socket.on('init', (data) => {
+            id = data.socketId;
+        });
+
+        socket.on('join', (data) => {
+            if (id == data.socketId) {
+                color = palette.randomColor();
+                document.getElementById('title').textContent = `Room : ${room}`;
+                // TODO Delete messages history
+            }
+        })
+
+        socket.on('fromServer', (data) => {
+            let message = data.message;
+            console.log(`Sender : ${data.sender}, id : ${id}`);
+            console.log(palette.get(color, '500'));
+            if (data.sender == id) {
+                console.log(`Me : ${message}`);
+                document.getElementById("messages-history").innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
+            } else {
+                console.log(`Server : ${message}`);
+                document.getElementById("messages-history").innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+            // TODO: Display again login page
+        });
+
+        function send() {
+            let element = document.getElementById('message');
+            socket.emit('toServer', element.value);
+            element.value = '';
+        }
+    </script>
+</body>
+
+</html>

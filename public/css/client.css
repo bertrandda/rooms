@@ -1,0 +1,55 @@
+.message {
+    width: 95%;
+    margin: 5px;
+}
+
+.server {
+    text-align: start;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.mine {
+    text-align: end;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#title {
+    font-family: 'Teko', sans-serif;
+    font-size: 5em;
+    margin: 0;
+    text-align: center;
+}
+
+#message-history {
+    width: 95%;
+    position: absolute;
+    top: 0;
+}
+
+#div-send {
+    width: 95%;
+    position: absolute;
+    bottom: 0;
+}
+
+#message {
+    width: 80%;
+    margin: 5px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(150, 150, 150);
+}
+
+#send-message {
+    width: 10%;
+    margin: 5px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(150, 150, 150);
+}
+
+#send-message:hover {
+    cursor: pointer;
+}
