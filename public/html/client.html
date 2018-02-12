@@ -30,6 +30,7 @@
         });
 
         socket.on('join', (data) => {
+            room = data.room;
             if (id == data.socketId) {
                 color = palette.randomColor();
                 document.getElementById('title').textContent = `Room : ${room}`;
@@ -38,16 +39,16 @@
         })
 
         socket.on('fromServer', (data) => {
-            let message = data.message;
-            console.log(`Sender : ${data.sender}, id : ${id}`);
-            console.log(palette.get(color, '500'));
+            const message = data.message;
             if (data.sender == id) {
-                console.log(`Me : ${message}`);
                 document.getElementById("messages-history").innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
             } else {
-                console.log(`Server : ${message}`);
                 document.getElementById("messages-history").innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
             }
+        });
+
+        socket.on('warning', (data) => {
+            console.log(data.message);
         });
 
         socket.on('disconnect', () => {

@@ -25,17 +25,15 @@ io.on('connection', (socket) => {
 
   console.log(`Connection with ${socket.id} in ${room}`);
   socket.emit('init', { socketId: socket.id });
-  socket.join(room);
-  io.sockets.in(room).emit('join', { socketId: socket.id });
+  joinRoom(room);
 
   let clientProperties = {};
   clientsConnected[socket.id] = clientProperties;
 
   socket.on('toServer', (message) => {
     if (message.startsWith('/')) {
-      console.log(`Command send : ${message.split(' ')[0]}`);
+      executeCommand(message.split(' '))
     } else {
-      console.log(`Client ${socket.id} send : ${message} from ${room}`);
       io.sockets.in(room).emit('fromServer', { sender: socket.id, message: message });
     }
   });
@@ -45,21 +43,27 @@ io.on('connection', (socket) => {
     delete clientsConnected[socket.id];
   });
 
-  function executeCommand(cmd, params) {
-    switch (cmd) {
+  function joinRoom(room) {
+    socket.join(room);
+    io.sockets.in(room).emit('join', { socketId: socket.id, room:room });
+  }
+
+  function executeCommand(params) {
+    console.log(params);
+    switch (params[0]) {
       case '/room':
         // TODO Room changement
-        if (params.length >= 1 && params[0].length >= 3) {
+        if (params.length >= 2) {
           socket.leave(room);
-          room = params[0];
-          socket.join(room);
+          room = params[1];
+          joinRoom(room);
         } else {
-          socket.emit('warning', 'Use /room <room_name>')
+          socket.emit('warning', { message: 'Use /room <room_name>' })
         }
-
         break;
       // Add other case Name changement ...
       default:
+        socket.emit('warning', { message: 'Use /help to know how commands work' })
         break;
     }
   }
