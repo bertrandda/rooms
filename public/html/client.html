@@ -14,54 +14,62 @@
 
 <body>
     <h1 id="title">Room : </h2>
-    <div id="messages-history"></div>
-    <div id="div-send">
-        <input id="message" autocomplete="off" type="text">
-        <input id="send-message" value="Send" type="button" onclick="send()">
-    </div>
-    <script>
-        let room = 'room1';
-        let socket = io.connect('/', { query: `room=${room}` });
-        let id;
-        let color;
+        <div id="messages-history"></div>
+        <div id="div-send">
+            <input id="message" autocomplete="off" type="text" onkeypress="return onPressEnter(event)">
+            <input id="send-message" value="Send" type="button" onclick="send()">
+        </div>
+        <script>
+            let room = 'room1';
+            let socket = io.connect('/', { query: `room=${room}` });
+            let id;
+            let color;
 
-        socket.on('init', (data) => {
-            id = data.socketId;
-        });
+            socket.on('init', (data) => {
+                id = data.socketId;
+            });
 
-        socket.on('join', (data) => {
-            room = data.room;
-            if (id == data.socketId) {
-                color = palette.randomColor();
-                document.getElementById('title').textContent = `Room : ${room}`;
-                // TODO Delete messages history
+            socket.on('join', (data) => {
+                room = data.room;
+                if (id == data.socketId) {
+                    color = palette.randomColor();
+                    document.getElementById('title').textContent = `Room : ${room}`;
+                    // TODO Delete messages history
+                }
+            })
+
+            socket.on('fromServer', (data) => {
+                const message = data.message;
+                if (data.sender == id) {
+                    document.getElementById("messages-history").innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
+                } else {
+                    document.getElementById("messages-history").innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
+                }
+            });
+
+            socket.on('warning', (data) => {
+                console.log(data.message);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+                // TODO: Display again login page
+            });
+
+            function onPressEnter(event) {
+                if (event.keyCode == 13) {
+                    send();
+                    console.log('enter');
+                    return false;
+                }
             }
-        })
 
-        socket.on('fromServer', (data) => {
-            const message = data.message;
-            if (data.sender == id) {
-                document.getElementById("messages-history").innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
-            } else {
-                document.getElementById("messages-history").innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
+            function send() {
+                let element = document.getElementById('message');
+                socket.emit('toServer', element.value);
+                element.value = '';
             }
-        });
-
-        socket.on('warning', (data) => {
-            console.log(data.message);
-        });
-
-        socket.on('disconnect', () => {
-            console.log('Socket disconnected');
-            // TODO: Display again login page
-        });
-
-        function send() {
-            let element = document.getElementById('message');
-            socket.emit('toServer', element.value);
-            element.value = '';
-        }
-    </script>
+        </script>
 </body>
 
 </html>
