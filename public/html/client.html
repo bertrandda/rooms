@@ -34,16 +34,16 @@
                 if (id == data.socketId) {
                     color = palette.randomColor();
                     document.getElementById('title').textContent = `Room : ${room}`;
-                    // TODO Delete messages history
+                    document.getElementById('messages-history').innerHTML = '';
                 }
             })
 
             socket.on('fromServer', (data) => {
                 const message = data.message;
                 if (data.sender == id) {
-                    document.getElementById("messages-history").innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
+                    document.getElementById('messages-history').innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
                 } else {
-                    document.getElementById("messages-history").innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
+                    document.getElementById('messages-history').innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
                 }
             });
 
