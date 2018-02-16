@@ -31,6 +31,7 @@ io.on('connection', (socket) => {
   clientsConnected[socket.id] = clientProperties;
 
   socket.on('toServer', (message) => {
+    message = message.trim();
     if (message.startsWith('/')) {
       executeCommand(message.split(' '))
     } else {
@@ -49,11 +50,9 @@ io.on('connection', (socket) => {
   }
 
   function executeCommand(params) {
-    console.log(params);
     switch (params[0]) {
       case '/room':
-        // TODO Room changement
-        if (params.length >= 2) {
+        if (params.length >= 2 && room != params[1]) {
           socket.leave(room);
           room = params[1];
           joinRoom(room);
