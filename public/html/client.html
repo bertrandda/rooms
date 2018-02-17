@@ -3,24 +3,23 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Sockets</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link type="text/css" rel="stylesheet" href="../css/client.css">
+    <link type="text/css" rel="stylesheet" href="../css/client.css" media="screen, handheld" />
     <link href="https://fonts.googleapis.com/css?family=Teko" rel="stylesheet">
     <script src='../js/palette.js'></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
-    <h1 id="title">Room : </h2>
+    <h1 id="title"></h2>
         <div id="messages-history"></div>
         <div id="div-send">
-            <input id="message" autocomplete="off" type="text" onkeypress="return onPressEnter(event)">
+            <input id="message-input" autocomplete="off" type="text" onkeypress="return onPressEnter(event)">
             <input id="send-message" value="Send" type="button" onclick="send()">
         </div>
         <script>
-            let room = 'room1';
+            let room = 'Room1';
             let socket = io.connect('/', { query: `room=${room}` });
             let id;
             let color;
@@ -33,18 +32,20 @@
                 room = data.room;
                 if (id == data.socketId) {
                     color = palette.randomColor();
-                    document.getElementById('title').textContent = `Room : ${room}`;
+                    document.getElementById('title').textContent = room;
                     document.getElementById('messages-history').innerHTML = '';
                 }
             })
 
             socket.on('fromServer', (data) => {
                 const message = data.message;
+                const messagesHistory = document.getElementById('messages-history');
                 if (data.sender == id) {
-                    document.getElementById('messages-history').innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
+                    messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
                 } else {
-                    document.getElementById('messages-history').innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
+                    messagesHistory.innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
                 }
+                messagesHistory.scrollTop = messagesHistory.scrollHeight;
             });
 
             socket.on('warning', (data) => {
@@ -59,13 +60,12 @@
             function onPressEnter(event) {
                 if (event.keyCode == 13) {
                     send();
-                    console.log('enter');
                     return false;
                 }
             }
 
             function send() {
-                let element = document.getElementById('message');
+                let element = document.getElementById('message-input');
                 socket.emit('toServer', element.value);
                 element.value = '';
             }
