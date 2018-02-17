@@ -32,7 +32,9 @@ io.on('connection', (socket) => {
 
   socket.on('toServer', (message) => {
     message = message.trim();
-    if (message.startsWith('/')) {
+    if (message.length == 0) {
+      return;
+    } else if (message.startsWith('/')) {
       executeCommand(message.split(' '))
     } else {
       io.sockets.in(room).emit('fromServer', { sender: socket.id, message: message });
