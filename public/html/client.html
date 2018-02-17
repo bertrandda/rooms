@@ -41,9 +41,9 @@
                 const message = data.message;
                 const messagesHistory = document.getElementById('messages-history');
                 if (data.sender == id) {
-                    messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}">${message}</p>`;
+                    messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}; color: ${palette.getText(color, '300')}">${message}</p>`;
                 } else {
-                    messagesHistory.innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '500')}">${message}</p>`;
+                    messagesHistory.innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '600')}; color: ${palette.getText(color, '600')}">${message}</p>`;
                 }
                 messagesHistory.scrollTop = messagesHistory.scrollHeight;
             });
