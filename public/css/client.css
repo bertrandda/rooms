@@ -12,18 +12,22 @@ body {
 .message {
     margin: 5px;
     font-family: 'Teko', sans-serif;
+    width: 75%;
+    word-wrap: break-word;
 }
 
 .server {
     text-align: start;
     padding: 10px;
     border-radius: 5px;
+    float: left;
 }
 
 .mine {
     text-align: end;
     padding: 10px;
     border-radius: 5px;
+    float: right;
 }
 
 #title {
