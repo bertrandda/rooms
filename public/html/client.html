@@ -12,50 +12,99 @@
 </head>
 
 <body>
-    <h1 id="title"></h2>
+    <!-- TODO Style in stylesheet -->
+    <div id="loginPage" style="height:100%; width:100%; display:table; background-color:rgba(50, 50, 50, 0.8)">
+        <form onsubmit="return startConnection()" style="display:table-cell; text-align:center; vertical-align:middle">
+            <div>
+                <label for="roomName" style="color:white; display:inline-block; width:90px; text-align:end;">
+                    Room
+                </label>
+                <input id="roomName" type="text" placeholder="Room1" style="margin: 10px; padding: 10px; border-radius: 5px; border: 1px solid rgb(150, 150, 150);"
+                    pattern=".{3,}" required title="at least 3 characters" />
+            </div>
+            <div>
+                <label for="userName" style="color:white; display:inline-block; width:90px; text-align:end;">
+                    Username
+                </label>
+                <input id="userName" type="text" placeholder="Harold" style="margin: 10px; padding: 10px; border-radius: 5px; border: 1px solid rgb(150, 150, 150);"
+                    pattern=".{3,}" required title="at least 3 characters" />
+            </div>
+            <input value="Enter" type="submit" style="color:white; background-color: rgb(125, 125, 125); border: 1px solid rgb(150, 150, 150); padding-left:20px; padding-right:20px; padding-top:5px; padding-bottom:5px; border-radius:5px"
+            />
+        </form>
+    </div>
+
+    <div id="chat-page">
+        <h1 id="title"></h1>
         <div id="messages-history"></div>
         <div id="div-send">
             <input id="message-input" autocomplete="off" type="text" onkeypress="return onPressEnter(event)">
             <input id="send-message" value="Send" type="button" onclick="send()">
         </div>
         <script>
-            let room = 'Room1';
-            let socket = io.connect('/', { query: `room=${room}` });
-            let id;
-            let color;
+            let room = null;
+            let socket = null;
+            let id = null;
+            let color = null;
 
-            socket.on('init', (data) => {
-                id = data.socketId;
-            });
-
-            socket.on('join', (data) => {
-                room = data.room;
-                if (id == data.socketId) {
-                    color = palette.randomColor();
-                    document.getElementById('title').textContent = room;
-                    document.getElementById('messages-history').innerHTML = '';
-                }
-            })
-
-            socket.on('fromServer', (data) => {
-                const message = data.message;
-                const messagesHistory = document.getElementById('messages-history');
-                if (data.sender == id) {
-                    messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}; color: ${palette.getText(color, '300')}">${message}</p>`;
+            function startConnection() {
+                if (document.getElementById('roomName').value.length < 3) {
+                    // TODO Change to Red
+                    return false;
+                } else if (document.getElementById('userName').value.length < 3) {
+                    // TODO Change to Red
+                    return false;
                 } else {
-                    messagesHistory.innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '600')}; color: ${palette.getText(color, '600')}">${message}</p>`;
+                    room = document.getElementById('roomName').value.trim();
+                    // TODO Start socket
+                    startSocket();
+                    return false;
                 }
-                messagesHistory.scrollTop = messagesHistory.scrollHeight;
-            });
+            }
 
-            socket.on('warning', (data) => {
-                console.log(data.message);
-            });
+            function startSocket() {
+                socket = io.connect('/', { query: `room=${room}` });
 
-            socket.on('disconnect', () => {
-                console.log('Socket disconnected');
-                // TODO: Display again login page
-            });
+                socket.on('init', (data) => {
+                    id = data.socketId;
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('chat-page').style.display = 'flex';
+                });
+
+                socket.on('join', (data) => {
+                    room = data.room;
+                    if (id == data.socketId) {
+                        color = palette.randomColor();
+                        document.getElementById('title').textContent = room;
+                        document.getElementById('messages-history').innerHTML = '';
+                    }
+                });
+
+                socket.on('fromServer', (data) => {
+                    const message = data.message;
+                    const messagesHistory = document.getElementById('messages-history');
+                    if (data.sender == id) {
+                        messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}; color: ${palette.getText(color, '300')}">${message}</p>`;
+                    } else {
+                        messagesHistory.innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '600')}; color: ${palette.getText(color, '600')}">${message}</p>`;
+                    }
+                    messagesHistory.scrollTop = messagesHistory.scrollHeight;
+                });
+
+                socket.on('warning', (data) => {
+                    console.log(data.message);
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('Socket disconnected');
+                    displayLogin();
+                });
+            }
+
+            function displayLogin() {
+                document.getElementById('chat-page').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'table';
+            }
 
             function onPressEnter(event) {
                 if (event.keyCode == 13) {
@@ -70,6 +119,7 @@
                 element.value = '';
             }
         </script>
+    </div>
 </body>
 
 </html>
