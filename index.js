@@ -17,55 +17,72 @@ var clientsConnected = {}
 
 let io = require('socket.io')(server);
 io.on('connection', (socket) => {
-  let room = socket.handshake.query.room;
-  if (room.length < 3) {
+  let room = filterText(socket.handshake.query.room);
+  let user = filterText(socket.handshake.query.user);
+  if (room.length < 3 || user.length < 3) {
     socket.disconnect(true);
     return;
   }
 
-  console.log(`Connection with ${socket.id} in ${room}`);
-  socket.emit('init', { socketId: socket.id });
+  socket.emit('init', {});
   joinRoom(room);
 
-  let clientProperties = {};
-  clientsConnected[socket.id] = clientProperties;
+  let i = 1;
+  while (true) {
+    if (!Object.values(clientsConnected).includes(`${user}${i}`)) {
+      clientsConnected[socket.id] = `${user}${i}`;
+      break;
+    }
+    i++;
+  }
 
   socket.on('toServer', (message) => {
-    message = message.trim();
+    message = filterText(message);
     if (message.length == 0) {
       return;
     } else if (message.startsWith('/')) {
       executeCommand(message.split(' '))
     } else {
-      io.sockets.in(room).emit('fromServer', { sender: socket.id, message: message });
+      socket.broadcast.to(room).emit('fromServer', { sender: clientsConnected[socket.id], message: message });
     }
   });
 
   socket.on('disconnect', () => {
-    console.log(`Client ${socket.id} disconnected`);
     delete clientsConnected[socket.id];
   });
 
   function joinRoom(room) {
     socket.join(room);
-    io.sockets.in(room).emit('join', { socketId: socket.id, room:room });
+    socket.emit('join', { room: room });
   }
 
   function executeCommand(params) {
     switch (params[0]) {
+      case '/help':
+        socket.emit('warning', { message: filterText('Change the room : /room <room_name>') });
+        socket.emit('warning', { message: filterText('Disconnection : /disconnect') });
+        break;
       case '/room':
-        if (params.length >= 2 && room != params[1]) {
+        if (params.length >= 2 && room != params[1] && params[1].length > 2) {
           socket.leave(room);
           room = params[1];
           joinRoom(room);
         } else {
-          socket.emit('warning', { message: 'Use /room <room_name>' })
+          socket.emit('warning', { message: filterText('Use /room <room_name>') })
         }
         break;
-      // Add other case Name changement ...
+      case '/disconnect':
+        socket.disconnect();
+        break;
       default:
         socket.emit('warning', { message: 'Use /help to know how commands work' })
         break;
     }
+  }
+
+  function filterText(input) {
+    return input.trim()
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 });

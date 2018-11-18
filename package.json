@@ -1,5 +1,5 @@
 {
-  "name": "Rooms",
+  "name": "rooms",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,8 +8,8 @@
     "start": "node index.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Bertrand d'Aure",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.16.2",
     "socket.io": "^2.0.4"

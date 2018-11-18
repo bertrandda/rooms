@@ -3,10 +3,11 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Sockets</title>
+    <title>Rooms</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link type="text/css" rel="stylesheet" href="../css/client.css" media="screen, handheld" />
     <link href="https://fonts.googleapis.com/css?family=Teko" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Niramit" rel="stylesheet">
     <script src='../js/palette.js'></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -16,13 +17,11 @@
         <form id="login-form" onsubmit="return startConnection()">
             <div>
                 <label for="roomName">Room</label>
-                <input id="roomName" class="loginInput" type="text" placeholder="Room1" pattern=".{3,}" required title="at least 3 characters"
-                />
+                <input id="roomName" class="loginInput" type="text" placeholder="Room1" pattern=".{3,}" required title="at least 3 characters" />
             </div>
             <div>
                 <label for="userName">Username</label>
-                <input id="userName" class="loginInput" type="text" placeholder="Harold" pattern=".{3,}" required title="at least 3 characters"
-                />
+                <input id="userName" class="loginInput" type="text" placeholder="Harold" pattern=".{3,}" required title="at least 3 characters" />
             </div>
             <input id="login-button" value="Enter" type="submit" />
         </form>
@@ -38,59 +37,51 @@
         <script>
             let room = null;
             let socket = null;
-            let id = null;
             let color = null;
 
             function startConnection() {
                 if (document.getElementById('roomName').value.length < 3) {
-                    // TODO Change to Red
                     return false;
                 } else if (document.getElementById('userName').value.length < 3) {
-                    // TODO Change to Red
                     return false;
                 } else {
                     room = document.getElementById('roomName').value.trim();
-                    // TODO Start socket
                     startSocket();
                     return false;
                 }
             }
 
             function startSocket() {
-                socket = io.connect('/', { query: `room=${room}` });
+                socket = io.connect('/', { query: `room=${room}&user=${document.getElementById('userName').value}` });
 
                 socket.on('init', (data) => {
-                    id = data.socketId;
                     document.getElementById('login-page').style.display = 'none';
                     document.getElementById('chat-page').style.display = 'flex';
                 });
 
                 socket.on('join', (data) => {
                     room = data.room;
-                    if (id == data.socketId) {
-                        color = palette.randomColor();
-                        document.getElementById('title').textContent = room;
-                        document.getElementById('messages-history').innerHTML = '';
-                    }
+                    color = palette.randomColor();
+                    document.getElementById('title').textContent = room;
+                    document.getElementById('messages-history').innerHTML = '';
                 });
 
                 socket.on('fromServer', (data) => {
                     const message = data.message;
+                    const sender = data.sender;
                     const messagesHistory = document.getElementById('messages-history');
-                    if (data.sender == id) {
-                        messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}; color: ${palette.getText(color, '300')}">${message}</p>`;
-                    } else {
-                        messagesHistory.innerHTML += `<p class="message server" style="background-color: ${palette.get(color, '600')}; color: ${palette.getText(color, '600')}">${message}</p>`;
-                    }
+                    messagesHistory.innerHTML += `<div class="message other" style="background-color: ${palette.get(color, '600')}; color: ${palette.getText(color, '600')}">${message}<div class="signature">${sender}</div></div>`;
                     messagesHistory.scrollTop = messagesHistory.scrollHeight;
                 });
 
                 socket.on('warning', (data) => {
-                    console.log(data.message);
+                    const message = data.message;
+                    const messagesHistory = document.getElementById('messages-history');
+                    messagesHistory.innerHTML += `<div class="message server">${message}</div>`;
+                    messagesHistory.scrollTop = messagesHistory.scrollHeight;
                 });
 
                 socket.on('disconnect', () => {
-                    console.log('Socket disconnected');
                     displayLogin();
                 });
             }
@@ -109,7 +100,15 @@
 
             function send() {
                 let element = document.getElementById('message-input');
-                socket.emit('toServer', element.value);
+                const messagesHistory = document.getElementById('messages-history');
+                const message = element.value.trim()
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                socket.emit('toServer', message);
+                if (!message.startsWith('/')) {
+                    messagesHistory.innerHTML += `<p class="mine message" style="background-color: ${palette.get(color, '300')}; color: ${palette.getText(color, '300')}">${message}</p>`;
+                    messagesHistory.scrollTop = messagesHistory.scrollHeight;
+                }
                 element.value = '';
             }
         </script>
